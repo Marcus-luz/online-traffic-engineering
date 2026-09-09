@@ -2,8 +2,8 @@ import pulp
 
 class OfflineOracle:
     def __init__(self, topology, demands):
-        self.topology = topology # List of links / Lista de enlaces
-        self.demands = demands   # List of demands / Lista de demandas
+        self.topology = topology 
+        self.demands = demands   
 
     def solve(self):
         # Create minimization problem / Cria problema de minimização
@@ -43,6 +43,6 @@ class OfflineOracle:
         
         # Output results / Retorna resultados
         if pulp.LpStatus[prob.status] == 'Optimal':
-            return True, pulp.value(prob.objective) # Found perfect route / Achou rota perfeita
+            return True, pulp.value(prob.objective) 
         else:
-            return False, None # Mathematically impossible / Matematicamente impossível
+            return False, None 

@@ -5,8 +5,7 @@ from src.engine import Engine
 from src.oracle import OfflineOracle
 
 def generate_adversarial_instance(n_hops):
-    # Generates a network to trick the exponential penalty
-    # Gera uma rede para enganar a penalidade exponencial
+    # Generates a network to trick the exponential penalty / Gera uma rede para enganar a penalidade exponencial
     topology = []
     
     # Path 1: Direct link (1 hop) / Caminho 1: Direto (1 salto)
@@ -45,12 +44,13 @@ def main():
         # 2. Online Engine
         net = Network()
         net.load_topology(topology)
-        router = Router(net)
+        router = Router(net) # Lera automaticamente o config.json
         engine = Engine(net, router)
         
         online_hops = 0
         for d in demands:
-            path = engine.process_demand(d['src'], d['dst'], d['size'], use_smart=True)
+            # Unpacking tuple (path, reason) / Desempacotando a tupla
+            path, reason = engine.process_demand(d['src'], d['dst'], d['size'], use_smart=True)
             if path:
                 online_hops += len(path) - 1 # Number of edges is nodes - 1
                 
