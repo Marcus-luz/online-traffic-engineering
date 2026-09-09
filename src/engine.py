@@ -15,12 +15,11 @@ class Engine:
         if not path:
             return False # Failed to route / Falhou ao rotear
 
-        # Check capacity for shortest path / Verifica capacidade no caminho curto
-        if not use_smart:
-            for i in range(len(path) - 1):
-                u, v = path[i], path[i+1]
-                if self.net.get_remaining_capacity(u, v) < demand_size:
-                    return False # Capacity exceeded / Limite excedido
+        # Validate capacity for ANY path / Valida capacidade para QUALQUER caminho
+        for i in range(len(path) - 1):
+            u, v = path[i], path[i+1]
+            if self.net.get_remaining_capacity(u, v) < demand_size:
+                return False # Capacity exceeded / Limite excedido
 
         # Allocate traffic / Aloca o tráfego
         for i in range(len(path) - 1):
