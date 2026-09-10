@@ -21,27 +21,40 @@ class Router:
 
     def route_smart_path(self, origin, destination, demand_size):
         # Smart routing avoiding congestion / Roteamento inteligente evitando congestionamento
-        reasoning = []
+        # Precisa recalcular o peso de TODOS os enlaces pra achar o caminho mais
+        # barato (Dijkstra precisa dos pesos da rede inteira).
         for u, v, data in self.net.graph.edges(data=True):
             free_space = data['capacity'] - data['utilization']
-            
+
             if free_space < demand_size:
                 # Full link / Enlace lotado
                 data['dynamic_weight'] = float('inf')
-                reasoning.append(f"Link {u}->{v} no capacity / Cabo {u}->{v} sem capacidade.")
             else:
                 # Exponential penalty for high usage / Penalidade exponencial por alto uso
                 usage_rate = data['utilization'] / data['capacity']
                 data['dynamic_weight'] = math.exp(self.penalty_base * usage_rate)
-                
-                # Log high usage links / Registra enlaces com alto uso
-                if usage_rate > 0.5:
-                    reasoning.append(f"{u}->{v} usage/uso {usage_rate*100:.0f}% (weight/peso {data['dynamic_weight']:.1f})")
 
         try:
             # Find path using dynamic weights / Encontra caminho usando pesos dinâmicos
             path = nx.shortest_path(self.net.graph, origin, destination, weight='dynamic_weight')
-            reason_str = "Detour via / Desvio por: " + " | ".join(reasoning) if reasoning else "Ideal path free / Rota ideal livre."
-            return path, reason_str
         except nx.NetworkXNoPath:
             return None, "No viable path / Rede sem caminhos viáveis."
+
+        # A explicação olha só pros enlaces que a rota escolhida realmente usa
+        # (Requisito 13: por que ESSA rota, não um raio-x da rede inteira).
+        details = []
+        for i in range(len(path) - 1):
+            u, v = path[i], path[i + 1]
+            data = self.net.graph[u][v]
+            usage_rate = data['utilization'] / data['capacity']
+            if usage_rate > 0.5:
+                details.append(
+                    f"{u}->{v} a {usage_rate*100:.0f}% de uso (peso {data['dynamic_weight']:.1f})"
+                )
+
+        if details:
+            reason_str = "Desvio por carga em: " + " | ".join(details)
+        else:
+            reason_str = "Rota livre, sem enlace acima de 50% de uso no caminho."
+
+        return path, reason_str

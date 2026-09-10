@@ -1,4 +1,5 @@
 {
     "EXP_PENALTY_BASE": 3.0,
-    "RANDOM_SEED": 42
+    "RANDOM_SEED": 42,
+    "ORACLE_EXACT_MAX_VARS": 500
 }

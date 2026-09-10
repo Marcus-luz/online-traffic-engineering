@@ -39,7 +39,8 @@ def main():
         
         # 1. Oracle (Offline)
         oracle = OfflineOracle(topology, demands)
-        is_possible, oracle_hops = oracle.solve()
+        oracle_result = oracle.solve()
+        oracle_hops = oracle_result['total_hops']
         
         # 2. Online Engine
         net = Network()
@@ -55,8 +56,8 @@ def main():
                 online_hops += len(path) - 1 # Number of edges is nodes - 1
                 
         # 3. Calculate Ratio / Calcula a Razão
-        ratio = online_hops / oracle_hops
-        print(f"{n:<10} | {online_hops:<15} | {oracle_hops:<15} | {ratio:.2f}x")
+        ratio = (online_hops / oracle_hops) if oracle_hops else float('inf')
+        print(f"{n:<10} | {online_hops:<15} | {oracle_hops:<15.1f} | {ratio:.2f}x")
 
 if __name__ == "__main__":
     main()
