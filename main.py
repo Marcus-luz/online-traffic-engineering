@@ -7,7 +7,6 @@ from src.oracle import OfflineOracle
 from src.fault_tolerance import FaultTester
 
 def load_demands_from_file(filepath):
-    # Load demands from text file / Carrega demandas do arquivo de texto
     demands = []
     with open(filepath, 'r') as f:
         for line in f:
@@ -17,7 +16,6 @@ def load_demands_from_file(filepath):
     return demands
 
 def get_max_utilization(net):
-    # Find the most utilized link / Encontra o enlace mais utilizado
     max_util = 0.0
     for u, v, data in net.graph.edges(data=True):
         util_rate = data['utilization'] / data['capacity']
@@ -26,8 +24,6 @@ def get_max_utilization(net):
     return max_util
 
 def simulate_routing(topo_file, demands, use_smart, label):
-    # Setup and simulate routing / Configura e simula o roteamento
-    print(f"\n--- {label} ---")
     net = Network()
     net.load_topology_from_file(topo_file)
     router = Router(net)
@@ -38,47 +34,45 @@ def simulate_routing(topo_file, demands, use_smart, label):
         path, reason = engine.process_demand(d['src'], d['dst'], d['size'], use_smart=use_smart)
         if path:
             total_hops += len(path) - 1
-            print(f"Demand/Demanda {d['id']}: Route/Rota {path} | Reason/Motivo: {reason}")
-        else:
-            print(f"Demand/Demanda {d['id']}: [-] Rejected/Rejeitada | Reason/Motivo: {reason}")
             
-    # Calculate and print metrics / Calcula e imprime métricas
     max_util = get_max_utilization(net)
-    print(f"-> Summary/Resumo {label}: {total_hops} total hops/saltos totais | Critical Load/Carga Crítica: {max_util*100:.1f}%")
+    print(f"-> {label}: {total_hops} saltos totais | Carga Crítica: {max_util*100:.1f}%")
     return net, router, engine
 
-def main():
-    # Start timer / Inicia cronômetro
-    start_time = time.time()
+def run_pipeline(topo_file, demands_file, label):
+    print(f"\n{'='*60}\n{label}\n{'='*60}")
     
-    # Setup paths / Configura caminhos
-    topo_file = os.path.join('data', 'rede.txt')
-    demands_file = os.path.join('data', 'demandas.txt')
-
-    # Load base network / Carrega rede base
     net_base = Network()
     net_base.load_topology_from_file(topo_file)
     topology_list = [(u, v, data['capacity']) for u, v, data in net_base.graph.edges(data=True)]
     demands = load_demands_from_file(demands_file)
 
-    # 1. Oracle (Offline) / Ótimo Offline
-    print("--- 1. Offline Optimum / Ótimo Offline (Oráculo) ---")
+    # 1. Oracle (Offline)
+    print("--- 1. Offline Optimum / Ótimo Offline ---")
     oracle = OfflineOracle(topology_list, demands)
     is_possible, best_score = oracle.solve()
-    print(f"Perfect score / Score perfeito: {best_score} hops/saltos" if is_possible else "Mathematically impossible / Matematicamente impossível.")
+    print(f"Score perfeito: {best_score} saltos" if is_possible else "Matematicamente impossível alocar 100% (Infactível).")
 
-    # 2. Baseline (Shortest Path) / Piso de Comparação (Caminho Mínimo)
-    simulate_routing(topo_file, demands, use_smart=False, label="2. Baseline / Piso de Comparação")
+    # 2. Baseline
+    simulate_routing(topo_file, demands, use_smart=False, label="2. Piso de Comparação (Caminho Mínimo)")
     
-    # 3. Smart Router / Roteador Inteligente
-    net_smart, router_smart, engine_smart = simulate_routing(topo_file, demands, use_smart=True, label="3. Heuristic Router / Roteador Heurístico")
+    # 3. Smart Router
+    net_smart, router_smart, engine_smart = simulate_routing(topo_file, demands, use_smart=True, label="3. Roteador Heurístico (Primal-Dual)")
 
-    # 4. Link Failure Test / Teste de Falhas
+    # 4. Link Failure Test
     tester = FaultTester(net_smart, router_smart, engine_smart)
     tester.run_link_failure_test()
+
+def main():
+    start_time = time.time()
     
-    # Print execution time / Imprime tempo de execução
-    print(f"\nExecution Time / Tempo de Execução: {time.time() - start_time:.4f} seconds/segundos")
+    # Executa a prova de conceito original (Pequena escala)
+    run_pipeline(os.path.join('data', 'rede.txt'), os.path.join('data', 'demandas.txt'), "CENÁRIO 1: REDE BASE (PROVA DE CONCEITO)")
+    
+    # Executa a prova de escala (100 nós)
+    run_pipeline(os.path.join('data', 'rede_100_nos.txt'), os.path.join('data', 'demandas_100_nos.txt'), "CENÁRIO 2: ESCALA (100 NÓS)")
+    
+    print(f"\nTempo Total de Execução (Requisito 7): {time.time() - start_time:.4f} segundos")
 
 if __name__ == "__main__":
     main()

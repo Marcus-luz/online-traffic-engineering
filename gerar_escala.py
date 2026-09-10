@@ -1,6 +1,12 @@
 import random
+import json
 
 def gerar_topologia_e_demandas(num_nos=100, num_demandas=50):
+    # Carrega a seed do config.json para garantir determinismo (Requisito 8)
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    random.seed(config.get("RANDOM_SEED", 42))
+
     # Generate 100-node topology / Gera topologia com 100 nós
     with open('data/rede_100_nos.txt', 'w') as f:
         for i in range(1, num_nos):
