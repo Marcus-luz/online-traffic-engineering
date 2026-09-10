@@ -23,8 +23,8 @@ Python 3.10+, dependências fixadas em `requirements.txt`.
    ```
 2. Crie e ative um ambiente virtual:
    ```
-   python -m venv venv
-   source venv/bin/activate   # Windows (PowerShell): .\venv\Scripts\activate
+   `python -m venv venv`
+   `source venv/bin/activate`   # Windows (PowerShell): `.\venv\Scripts\activate`
    ```
 3. Instale as dependências:
    ```
